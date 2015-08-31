@@ -17,7 +17,7 @@ public class k_means {
 	private Instances dataSet;
 	private int iterations = 0;
 	private List<Element> set;
-	private List<List<Double>> centroids; // Coordenadas das centoids
+	private List<List<Double>> centroids; // Coordenadas das centroids
 	private List<List<Instance>> centroidSet;
 
 	public k_means() {
@@ -37,28 +37,28 @@ public class k_means {
 		set = new ArrayList<Element>();
 		centroidSet = new ArrayList<List<Instance>>();
 		iterations = 0;
-		
+
 		// Iniciar as listas das centroides.
 		for (int n = 0; n < k; n++) {
 			List<Instance> s = new ArrayList<Instance>();
 			centroidSet.add(n, s);
 		}
-		
+
 		// Lê a base de dados.
 		this.dataSet = readArff(pathDataSet);
-		
-		centroids = getCentroids();
+
+		centroids = getRandomCentroids(k);
 
 		while (iterations < 3) {
 			//TODO: Criterio de parada.
 			//Associa cada ponto ao centro mais próximo.
-			for (int n = 0; n < dataSet.numInstances() ; n++) {
+			for (int n = 0; n < dataSet.numInstances(); n++) {
 				Instance i = dataSet.instance(n);
-				centroidSet.get(getLabel(i, centroids)).add(i);				
+				centroidSet.get(getLabel(i, centroids)).add(i);
 			}
 			//Recalcula os centros.
-			//getNewCentroids(k);
-			iterations ++;
+			centroids = getNewCentroids();
+			iterations++;
 
 		}
 	}
@@ -66,7 +66,7 @@ public class k_means {
 	protected List<List<Double>> getRandomCentroids(int k) {
 		// TODO: Casas decimais saindo incorretas. 
 		List<List<Double>> centroids = new ArrayList<List<Double>>();
-		
+
 		for (int z = 0; z < dataSet.numAttributes() - 2; z++) {
 			double max = 0;
 			double min = 0;
@@ -80,10 +80,10 @@ public class k_means {
 
 				Random rand = new Random();
 
-				Double seed = rand.nextDouble();				
-				centroid.add(i, decimalFormat(seed * (max - min)) + min);				
+				Double seed = rand.nextDouble();
+				centroid.add(i, decimalFormat(seed * (max - min)) + min);
 			}
-			centroids.add(z, centroid);			
+			centroids.add(z, centroid);
 		}
 		return centroids;
 	}
@@ -93,56 +93,72 @@ public class k_means {
 	 * Atualiza o valor das centroides para a média dos pontos da centroide antiga. 
 	 * Se uma centroide não tem nenhum elemento é sorteado um valor.
 	 */
-	protected List<List<Double>> getNewCentroids(int K) {
-		
-		for (List<Instance> list : centroidSet){
-			Double[] soma = new Double [list.get(0).numAttributes()-1];
-			
-			for (Instance i : list){
+	protected List<List<Double>> getNewCentroids() {
+
+		List<List<Double>> NewCentroids = new ArrayList<List<Double>>();
+
+		int count = 0;
+		for (List<Instance> list : centroidSet) {
+			Double[] soma = new Double[list.get(0).numAttributes() - 1];
+
+			for (int n = 0; n < soma.length; n++) {
+				soma[n] = 0.0;
+			}
+
+			for (Instance i : list) {
 				// Faz a soma dos os atributos dsa instanciais que estão na mesma centroid.
-				for (int n = 0; n <= i.numAttributes()-2; n++){
-					soma[n] += i.value(n);					
-				}				
+				for (int n = 0; n <= i.numAttributes() - 2; n++) {
+					soma[n] += i.value(n);
+				}
+			}
+
+			List<Double> centroid = new ArrayList<Double>();
+
+			for (int n = 0; n < soma.length; n++) {
+				soma[n] = decimalFormat(soma[n] / list.size());
+				centroid.add(n, soma[n]);				
 			}
 			
+			NewCentroids.add(count, centroid);
+			count++;
 		}
-		
-		return null;
+
+		return NewCentroids;
 	}
 
 	/* Função: getCentroids
 	 * ---------------------------
 	 * Retorna centrids de teste (Menor, Média e Maior).
 	 */
-	
-	protected List<List<Double>> getCentroids(){
+
+	protected List<List<Double>> getCentroids() {
 		List<Double> c1 = new ArrayList<Double>();
 		c1.add(0, 4.3);
 		c1.add(1, 2.0);
 		c1.add(2, 1.0);
 		c1.add(3, 0.1);
-		
+
 		List<Double> c2 = new ArrayList<Double>();
 		c2.add(0, 7.9);
 		c2.add(1, 4.4);
 		c2.add(2, 6.9);
 		c2.add(3, 2.5);
-		
+
 		List<Double> c3 = new ArrayList<Double>();
 		c3.add(0, 5.84);
 		c3.add(1, 3.05);
 		c3.add(2, 3.76);
 		c3.add(3, 1.2);
-		
+
 		List<List<Double>> c = new ArrayList<List<Double>>();
 		c.add(0, c1);
 		c.add(1, c2);
 		c.add(2, c3);
-		
+
 		return c;
-		
+
 	}
-	
+
 	/* Função: getDistance
 	 * ---------------------------
 	 * Retorna a distância euclidiana entre a Instance i e a centroid. Null se as dimensões diferentes.
@@ -156,7 +172,7 @@ public class k_means {
 		}
 
 		for (int att = 0; att <= i.numAttributes() - 2; att++) {
-			distance += Math.pow(i.value(att) - centroid.get(att), 2);			
+			distance += Math.pow(i.value(att) - centroid.get(att), 2);
 		}
 
 		return decimalFormat(Math.sqrt(distance));
@@ -169,15 +185,15 @@ public class k_means {
 	protected int getLabel(Instance i, List<List<Double>> centroids) {
 		int c = 0, smallest = 0;
 		Double dist = Double.MAX_VALUE;
-		
-		for (List<Double> centroid : centroids) {			
+
+		for (List<Double> centroid : centroids) {
 			if (getDistance(i, centroid) < dist) {
 				dist = getDistance(i, centroid);
 				smallest = c;
 			}
 			c++;
 		}
-		
+
 		return smallest;
 	}
 
@@ -202,9 +218,9 @@ public class k_means {
 		DecimalFormatSymbols dfs = new DecimalFormatSymbols();
 		dfs.setDecimalSeparator('.');
 
-		NumberFormat form = new DecimalFormat("0.#", dfs);
+		NumberFormat form = new DecimalFormat("0.###", dfs);
 
-		return Double.valueOf(form.format(number));
+		return Double.valueOf(form.format(number));		
 
 	}
 }
