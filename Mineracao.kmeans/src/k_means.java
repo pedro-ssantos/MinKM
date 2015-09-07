@@ -11,12 +11,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/*
+ * UNIVERSIDADE ESTADUAL DE FEIRA DE SANTANA
+ * Mineração de dados - Engenharia de Computação
+ * Professor: Tiago Amador
+ * Alunos : Pedro Santos e Daniel Fagundes
+ * Algoritmo: K means
+ */
+
 public class k_means {
 
 	private int k;
+	private int max_iterations;
 	private Instances dataSet;
-	private int iterations = 0;
-	private List<Element> set;
+	private int iterations = 0;	
 	private List<List<Double>> centroids; // Coordenadas das centroids
 	private List<List<Instance>> centroidSet;
 
@@ -33,24 +41,27 @@ public class k_means {
 	 * 4) Quando todos os pontos foram assinalados, recalcule a posição dos centros
 	 * 5) Repita os passos 3) e 4) até que os centros não se movam mais.
 	 */
-	public void run(String pathDataSet, int k) {
-		set = new ArrayList<Element>();
-		centroidSet = new ArrayList<List<Instance>>();
+	public void run(String pathDataSet, int k, int max_iterations) {		
+		
 		iterations = 0;
-
-		// Iniciar as listas das centroides.
-		for (int n = 0; n < k; n++) {
-			List<Instance> s = new ArrayList<Instance>();
-			centroidSet.add(n, s);
-		}
+		this.k = k;
+		
 
 		// Lê a base de dados.
 		this.dataSet = readArff(pathDataSet);
 
 		centroids = getRandomCentroids(k);
 
-		while (iterations < 3) {
+		while (iterations < max_iterations) {
 			//TODO: Criterio de parada.
+			// Iniciar as listas das centroides.
+			centroidSet = new ArrayList<List<Instance>>();
+			
+			for (int n = 0; n < k; n++) {
+				List<Instance> s = new ArrayList<Instance>();
+				centroidSet.add(n, s);
+			}
+			
 			//Associa cada ponto ao centro mais próximo.
 			for (int n = 0; n < dataSet.numInstances(); n++) {
 				Instance i = dataSet.instance(n);
@@ -59,10 +70,15 @@ public class k_means {
 			//Recalcula os centros.
 			centroids = getNewCentroids();
 			iterations++;
-
 		}
+		
+		printResult();
 	}
-
+	
+	/*Função: getRandomCentroids
+	 * --------------------------
+	 * Gera valores aleatórios para as coordenadas das centroids
+	 */
 	protected List<List<Double>> getRandomCentroids(int k) {
 		// TODO: Casas decimais saindo incorretas. 
 		List<List<Double>> centroids = new ArrayList<List<Double>>();
@@ -197,6 +213,10 @@ public class k_means {
 		return smallest;
 	}
 
+	/*Função: readArff
+	 * ------------------
+	 * Lê um arquivo .arff em path e devolve as instancias nele contido padrão weka.
+	 */
 	protected Instances readArff(String path) {
 		// Lê o dado do arquivo arff e retorna o set de dados em data.
 
@@ -213,14 +233,49 @@ public class k_means {
 		return null;
 	}
 
+	/*Função: decimalFormat
+	 * -------------------
+	 * Limitar o número de casas decimais.
+	 */
 	private Double decimalFormat(Double number) {
 
 		DecimalFormatSymbols dfs = new DecimalFormatSymbols();
 		dfs.setDecimalSeparator('.');
 
 		NumberFormat form = new DecimalFormat("0.###", dfs);
-
+		
+		
+		
 		return Double.valueOf(form.format(number));		
 
+	}
+	
+	private void printResult(){
+		System.out.println("Kmeans\n======");
+		System.out.printf("Number of iterations: %d \n", iterations);
+		System.out.println("Cluster centroids:");
+		
+		System.out.printf("Attribute\tCluster#\n\t");
+		
+		for (int n = 0; n < k; n++){
+			System.out.printf("\t #%d", n);
+		}
+		System.out.printf("\n\t");
+		
+		for (int n = 0; n < k; n++){
+			System.out.printf("\t(%d)", centroidSet.get(n).size());
+		}
+		System.out.printf("\n===============");
+		for (int n = 0; n < k; n++){
+			System.out.printf("========");
+		}
+		System.out.println();
+		for (int n = 0; n < dataSet.numAttributes()-1; n++){
+			System.out.print(dataSet.attribute(n).name());
+			for (int i = 0; i < k; i++){
+				System.out.printf("\t %.3f", centroids.get(i).get(n));
+			}
+			System.out.println();
+		}
 	}
 }
