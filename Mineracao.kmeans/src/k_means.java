@@ -1,7 +1,6 @@
 import weka.core.Instance;
 import weka.core.Instances;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -22,7 +21,6 @@ import java.util.Random;
 public class k_means {
 
 	private int k;
-	private int max_iterations;
 	private Instances dataSet;
 	private int iterations = 0;	
 	private List<List<Double>> centroids; // Coordenadas das centroids
